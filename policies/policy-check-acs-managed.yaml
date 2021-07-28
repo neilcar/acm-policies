@@ -39,28 +39,52 @@ spec:
                   namespace: stackrox
                 data:
                   central-endpoint: central-stackrox.apps.policy-grc-cp-autoclaims-2vcvb.dev08.red-chesterfield.com:443 # Set to the hostname and port of your central server
+    # - objectDefinition:
+    #     apiVersion: policy.open-cluster-management.io/v1
+    #     kind: ConfigurationPolicy
+    #     metadata:
+    #       name: policy-check-acs-sensor
+    #     spec:
+    #       remediationAction: inform # will be overridden by remediationAction in parent policy
+    #       severity: low
+    #       namespaceSelector:
+    #         include: ["stackrox"]
+    #       object-templates:
+    #         - complianceType: musthave
+    #           objectDefinition:
+    #             apiVersion: apps/v1
+    #             kind: Deployment
+    #             metadata:
+    #               name: sensor
+    #               namespace: stackrox
+    #             status:
+    #               conditions:
+    #                 - status: "True"
+    #                   type: Available
     - objectDefinition:
-        apiVersion: policy.open-cluster-management.io/v1
-        kind: ConfigurationPolicy
-        metadata:
-          name: policy-check-acs-sensor
-        spec:
-          remediationAction: inform # will be overridden by remediationAction in parent policy
-          severity: low
-          namespaceSelector:
-            include: ["stackrox"]
-          object-templates:
-            - complianceType: musthave
-              objectDefinition:
-                apiVersion: apps/v1
-                kind: Deployment
-                metadata:
-                  name: sensor
-                  namespace: stackrox
-                status:
-                  conditions:
-                    - status: "True"
-                      type: Available
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: advanced-cluster-security-operator-subscription
+      spec:
+        remediationAction: inform
+        severity: high
+        object-templates:
+          - complianceType: musthave
+            objectDefinition:
+              apiVersion: operators.coreos.com/v1alpha1
+              kind: Subscription
+              metadata:
+                name: rhacs-operator
+                namespace: openshift-operators
+              spec:
+                channel: latest
+                installPlanApproval: Automatic
+                name: rhacs-operator
+                source: redhat-operators
+                sourceNamespace: openshift-marketplace
+                startingCSV: rhacs-operator.v3.62.0
+
     - objectDefinition:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy

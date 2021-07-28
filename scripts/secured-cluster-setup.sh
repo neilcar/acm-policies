@@ -65,10 +65,10 @@ while [[ $# -gt 0 ]]; do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [[ -z $USERNAME ]]; then
-	echo "The '-u|--user <username>' parameter is required."
-	exit 1
-fi
+# if [[ -z $USERNAME ]]; then
+# 	echo "The '-u|--user <username>' parameter is required."
+# 	exit 1
+# fi
 
 if [[ -z $ACS_HOST ]]; then
 	echo "The '-a|--acs <hostname>' parameter is required."
@@ -96,10 +96,10 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     BASE='base64'
 fi
 
-echo -n "# Stackrox Image Access Password:" 
-read -s PASSWORD
+# echo -n "# Stackrox Image Access Password:" 
+# read -s PASSWORD
 
-AUTH=`echo -n "$USERNAME:$PASSWORD" | ${BASE}`
+# AUTH=`echo -n "$USERNAME:$PASSWORD" | ${BASE}`
 
 if [ -f "${BUNDLE_FILE}" ]; then
 	echo "# Using existing bundle file."
@@ -112,7 +112,7 @@ else
 	fi
 fi
 
-CACERT=`yq eval '.ca.cert' ${BUNDLE_FILE} | sed 's/^/                    /'`
+CACERT=`yq '.ca.cert' ${BUNDLE_FILE} | sed 's/^/                    /'`
 cat <<EOF > secured-cluster-resources.yaml
 ---
 apiVersion: v1
@@ -129,34 +129,34 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: stackrox-cluster-channel
+# ---
+# apiVersion: v1
+# data:
+#   .dockerconfigjson: `echo "{\"auths\":{\"https://stackrox.io\":{\"auth\":\"${AUTH}\"}}}" | ${BASE}`
+# kind: Secret
+# metadata:
+#   annotations:
+#     apps.open-cluster-management.io/deployables: "true"
+#   name: stackrox
+#   namespace: ${NAMESPACE}-staging
+# type: kubernetes.io/dockerconfigjson
+# ---
+# apiVersion: v1
+# data:
+#   .dockerconfigjson: `echo "{\"auths\":{\"https://collector.stackrox.io\":{\"auth\":\"${AUTH}\"}}}" | ${BASE}`
+# kind: Secret
+# metadata:
+#   annotations:
+#     apps.open-cluster-management.io/deployables: "true"
+#   name: collector-stackrox
+#   namespace: ${NAMESPACE}-staging
+# type: kubernetes.io/dockerconfigjson
 ---
 apiVersion: v1
 data:
-  .dockerconfigjson: `echo "{\"auths\":{\"https://stackrox.io\":{\"auth\":\"${AUTH}\"}}}" | ${BASE}`
-kind: Secret
-metadata:
-  annotations:
-    apps.open-cluster-management.io/deployables: "true"
-  name: stackrox
-  namespace: ${NAMESPACE}-staging
-type: kubernetes.io/dockerconfigjson
----
-apiVersion: v1
-data:
-  .dockerconfigjson: `echo "{\"auths\":{\"https://collector.stackrox.io\":{\"auth\":\"${AUTH}\"}}}" | ${BASE}`
-kind: Secret
-metadata:
-  annotations:
-    apps.open-cluster-management.io/deployables: "true"
-  name: collector-stackrox
-  namespace: ${NAMESPACE}-staging
-type: kubernetes.io/dockerconfigjson
----
-apiVersion: v1
-data:
-  admission-control-cert.pem: `yq eval '.admissionControl.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
-  admission-control-key.pem: `yq eval '.admissionControl.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
-  ca.pem: `yq eval '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
+  admission-control-cert.pem: `yq '.admissionControl.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
+  admission-control-key.pem: `yq '.admissionControl.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
+  ca.pem: `yq '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
 kind: Secret
 metadata:
   annotations:
@@ -167,9 +167,9 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  collector-cert.pem: `yq eval '.collector.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
-  collector-key.pem: `yq eval '.collector.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
-  ca.pem: `yq eval '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
+  collector-cert.pem: `yq '.collector.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
+  collector-key.pem: `yq '.collector.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
+  ca.pem: `yq '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
 kind: Secret
 metadata:
   annotations:
@@ -180,9 +180,9 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  sensor-cert.pem: `yq eval '.sensor.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
-  sensor-key.pem: `yq eval '.sensor.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
-  ca.pem: `yq eval '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
+  sensor-cert.pem: `yq '.sensor.serviceTLS.cert' ${BUNDLE_FILE} | ${BASE}`
+  sensor-key.pem: `yq '.sensor.serviceTLS.key' ${BUNDLE_FILE} | ${BASE}`
+  ca.pem: `yq '.ca.cert' ${BUNDLE_FILE} | ${BASE}`
 kind: Secret
 metadata:
   annotations:
@@ -209,17 +209,17 @@ metadata:
 spec:
   pathname: ${NAMESPACE}-staging
   type: Namespace
----
-apiVersion: apps.open-cluster-management.io/v1
-kind: Channel
-metadata:
-  name: acs-secured-cluster-services-ch
-  namespace: ${NAMESPACE}-cluster-channel
-  labels:
-    acm-app: acs-secured-cluster-services
-spec:
-  type: HelmRepo
-  pathname: https://charts.stackrox.io
+# ---
+# apiVersion: apps.open-cluster-management.io/v1
+# kind: Channel
+# metadata:
+#   name: acs-secured-cluster-services-ch
+#   namespace: ${NAMESPACE}-cluster-channel
+#   labels:
+#     acm-app: acs-secured-cluster-services
+# spec:
+#   type: HelmRepo
+#   pathname: https://charts.stackrox.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: Subscription
